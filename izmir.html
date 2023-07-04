@@ -1,0 +1,369 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        #map {
+            display: block;
+            height: 720px;
+            width: 1080px;
+            margin: auto;
+        }
+
+        .marker-tooltip {
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+    </style>
+    <title>İzmir Museums</title>
+</head>
+
+<body>
+    <h1>Izmir Museums</h1>
+    <div id="map"></div>
+    <button id="mainpage-button" onclick="goToHomePage()">Mainpage</button>
+    <button id="map-return" onclick="goToMap()">Back to Map</button>
+    <script>
+        function goToHomePage() {
+            window.location.href = '/mainpage';
+        }
+
+        function goToMap() {
+            window.location.href = '/mainpage/map';
+        }
+
+        function saveVisit(museumName, status) {
+            const data = {
+                museumName: museumName,
+                status: status
+            };
+
+            // Yerel depolama kullanarak status değerini sakla
+            localStorage.setItem(museumName, status);
+
+            fetch('/save-visit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        const popupContent = document.getElementById(museumName);
+                        const visitedButton = popupContent.querySelector('.visited-button');
+                        const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+                        if (status === 'visited') {
+                            visitedButton.remove();
+                            wishlistButton.remove();
+                            popupContent.innerHTML = 'You have visited here!';
+                        }
+                        if (status === 'wishlist') {
+                            wishlistButton.remove();
+                            const message = document.createElement('p');
+                            message.innerHTML = 'You want to visit here!';
+                            popupContent.appendChild(message);
+                        }
+                    } else {
+                        console.error('Failed to save visit');
+                    }
+                })
+                .catch(error => {
+                    console.error('An error occurred while saving visit:', error);
+                });
+        }
+
+        // Popup'ın açıldığında yerel depolamada status değerini kontrol et
+        function checkVisitStatus(museumName) {
+            const status = localStorage.getItem(museumName);
+            const popupContent = document.getElementById(museumName);
+
+            if (status === 'visited') {
+                const visitedButton = popupContent.querySelector('.visited-button');
+                const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+                visitedButton.remove();
+                wishlistButton.remove();
+                popupContent.innerHTML = 'You have visited here!';
+            } else if (status === 'wishlist') {
+                const wishlistButton = popupContent.querySelector('.wishlist-button');
+                const message = document.createElement('p');
+                message.innerHTML = 'You want to visit here!';
+                popupContent.appendChild(message);
+                wishlistButton.remove();
+            }
+        }
+    </script>
+</body>
+
+</html>
+<script>
+    var map = L.map('map').setView([38.414826944820184, 27.128857081720568], 9);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    function createPopupContent(imgURL, museumName, openingHours, entranceFee) {
+        var content = `
+            <img src="${imgURL}" width= "200">
+            <h1>${museumName}</h1>
+            <h2>Opening & Closing Time</h2>
+            <h3>${openingHours}</h3>
+            <h2>Entrance Fee</h2>
+            <h3>${entranceFee}</h3>
+            <div id="${museumName}">
+                <button class="visited-button" onclick="saveVisit('${museumName}', 'visited')">Add to Visited</button>
+                <button class="wishlist-button" onclick="saveVisit('${museumName}', 'wishlist')">Add to Wishlist</button>
+            </div>
+            `;
+        return content;
+    }
+    var marker = L.marker([38.414826944820184, 27.128857081720568]).addTo(map).bindPopup(createPopupContent(
+        "https://turkishmuseums.com/Uploads/M%C3%BCze/Foto/Foto%C4%9Fraflar/db5c0bfe-fc36-4ae2-b5d4-6addedf54a0e.jpg",
+        "Etnografya Müzesi",
+        "08:30-17:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.413839425160056, 27.128604237392675]).addTo(map).bindPopup(createPopupContent(
+
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcDArR8exK38iQKgbZcgP1WF9iv6-mF3kUckvltluhjg&s",
+        "Arkeoloji Müzesi",
+        "08:30-17:30",
+        "50 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.43581373415974, 27.140572811341684]).addTo(map).bindPopup(createPopupContent(
+        "https://upload.wikimedia.org/wikipedia/commons/5/59/Dis_mekan.jpg",
+        "Atatürk Müzesi",
+        "08:30-17:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.42792100367687, 27.143063652885413]).addTo(map).bindPopup(createPopupContent(
+        "https://lh3.googleusercontent.com/p/AF1QipMhVWDkmhrr1CKtag18oRAe9qre5O_kk91QJMhC=s680-w680-h510",
+        "Tarih ve Sanat Müzesi",
+        "08:30-17:30",
+        "10 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.12490430045041, 27.325866723584653]).addTo(map).bindPopup(createPopupContent(
+        "https://lh3.googleusercontent.com/p/AF1QipMSN4bvdDpj9CDdAJAxE_Y63Aq9pJnKRNuv_2Os=s680-w680-h510",
+        "Metropolis Örenyeri",
+        "08:30-17:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.420170818187785, 27.138451245948072]).addTo(map).bindPopup(createPopupContent(
+        "https://lh3.googleusercontent.com/p/AF1QipONSy37HmJtV3XI9RwziJCoR2i_APlVuWmp7E04=s680-w680-h510",
+        "Agora Örenyeri",
+        "08:30-17:30",
+        "100 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.17977164659379, 26.783380585411876]).addTo(map).bindPopup(createPopupContent(
+        "https://www.kulturportali.gov.tr/repoKulturPortali/Dokumanlar/I.HasanBodurteos012logolu_20180706104125462.jpg?format=jpg&quality=50",
+        "Teos Örenyeri",
+        "08:30-17:30",
+        "40 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.362992808024735, 26.769369539390137]).addTo(map).bindPopup(createPopupContent(
+        "https://gezgince.com/Makale/35/473/7/4/e87c9fcb9ce849fe560815ff40c5ad701aa8fdc1/social/klazomenai-antik-kentini-gezin.jpeg",
+        "Klazomenai Örenyeri",
+        "08:30-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.94913971938181, 27.36762388170485]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_cf82f045-82c4-4877-b1a3-2ecb0163bd14.jpg",
+        "Efes Müzesi",
+        "08:30-20:00",
+        "100 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.95106116533928, 27.36985097060496]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_88e0ad32-56f1-4c8c-a2a7-e149d2a3a04d.jpg",
+        "Efes Örenyeri",
+        "08:30-20:00",
+        "400 Turkish Liras"
+        ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.95310507360434, 27.36695543458502]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_845f8221-82a4-4f48-aeb9-8ca148062516.jpg",
+        "Ayasuluk- St Jean Örenyeri",
+        "08:30-19:00",
+        "100 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.003952419791545, 27.192686068213696]).addTo(map).bindPopup(createPopupContent(
+        "https://gezgince.com/Makale/35/467/7/28/a67910b6d003a7d4708ccf30b503ea127a64a84c/social/1572714999_neokur.jpeg",
+        "Klaros Örenyeri",
+        "08:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.32395821493757, 26.30304075288187]).addTo(map).bindPopup(createPopupContent(
+        "https://lh3.googleusercontent.com/p/AF1QipP3pHtQTZX1gYIbO_1zADH8U7JmqCBbals5UUt9=s680-w680-h510",
+        "Çeşme Müzesi",
+        "08:30-19:00",
+        "100 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([39.119757529943705, 27.175672219099145]).addTo(map).bindPopup(createPopupContent(
+        "https://indigodergisi.com/wp-content/uploads/2016/06/Milet-G%C3%BCney-Agora-Kap%C4%B1s%C4%B1.jpg",
+        "Bergama Müzesi",
+        "08:30-19:00",
+        "40 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.22818049893167, 27.989168528867637]).addTo(map).bindPopup(createPopupContent(
+        "https://kvmgm.ktb.gov.tr/Resim/354309,izmir-odemis-birgicakiraga03jpg.png?0",
+        "Ödemiş Müzesi",
+        "08:30-17:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([38.08865110049126, 27.732400998901774]).addTo(map).bindPopup(createPopupContent(
+        "https://cdn.otuzbeslik.com/img/mekan/tire-kent-muzesi.location.440.4oljky.jpg",
+        "Tire Müsesi",
+        "08:30-17:30",
+        "5 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+</script>

@@ -1,0 +1,204 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        #map {
+            display: block;
+            height: 720px;
+            width: 1080px;
+            margin: auto;
+        }
+
+        .marker-tooltip {
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+    </style>
+    <title>Manisa Museums</title>
+</head>
+
+<body>
+    <h1>Manisa Museums</h1>
+    <div id="map"></div>
+</body>
+<button id="mainpage-button" onclick="goToHomePage()">Mainpage</button>
+<button id="map-return" onclick="goToMap()">Back to Map</button>
+
+<script>
+    function goToHomePage() {
+        window.location.href = '/mainpage';
+    }
+
+    function goToMap() {
+        window.location.href = '/mainpage/map';
+    }
+
+    function saveVisit(museumName, status) {
+        const data = {
+            museumName: museumName,
+            status: status
+        };
+
+        // Yerel depolama kullanarak status değerini sakla
+        localStorage.setItem(museumName, status);
+
+        fetch('/save-visit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (response.ok) {
+                    const popupContent = document.getElementById(museumName);
+                    const visitedButton = popupContent.querySelector('.visited-button');
+                    const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+                    if (status === 'visited') {
+                        visitedButton.remove();
+                        wishlistButton.remove();
+                        popupContent.innerHTML = 'You have visited here!';
+                    }
+                    if (status === 'wishlist') {
+                        wishlistButton.remove();
+                        const message = document.createElement('p');
+                        message.innerHTML = 'You want to visit here!';
+                        popupContent.appendChild(message);
+                    }
+                } else {
+                    console.error('Failed to save visit');
+                }
+            })
+            .catch(error => {
+                console.error('An error occurred while saving visit:', error);
+            });
+    }
+
+    // Popup'ın açıldığında yerel depolamada status değerini kontrol et
+    function checkVisitStatus(museumName) {
+        const status = localStorage.getItem(museumName);
+        const popupContent = document.getElementById(museumName);
+
+        if (status === 'visited') {
+            const visitedButton = popupContent.querySelector('.visited-button');
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+            visitedButton.remove();
+            wishlistButton.remove();
+            popupContent.innerHTML = 'You have visited here!';
+        } else if (status === 'wishlist') {
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+            const message = document.createElement('p');
+            message.innerHTML = 'You want to visit here!';
+            popupContent.appendChild(message);
+            wishlistButton.remove();
+        }
+    }
+</script>
+
+</html>
+<script>
+    var map = L.map('map').setView([38.70815936784841, 27.60528767862981], 10);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+    function createPopupContent(imgURL, museumName, openingHours, entranceFee) {
+        var content = `
+            <img src="${imgURL}" width= "200">
+            <h1>${museumName}</h1>
+            <h2>Opening & Closing Time</h2>
+            <h3>${openingHours}</h3>
+            <h2>Entrance Fee</h2>
+            <h3>${entranceFee}</h3>
+            <div id="${museumName}">
+                <button class="visited-button" onclick="saveVisit('${museumName}', 'visited')">Add to Visited</button>
+                <button class="wishlist-button" onclick="saveVisit('${museumName}', 'wishlist')">Add to Wishlist</button>
+            </div>
+            `;
+        return content;
+    }
+
+    var marker1 = L.marker([38.6153085959696, 27.400771484536975]).addTo(map).bindPopup(createPopupContent(
+        "https://lh5.googleusercontent.com/p/AF1QipNiLGCEYx8WzTuZ3BoPVsw_0g1PfYxELKxL2hGP=w426-h240-k-no",
+        "Arkeoloji ve Etnografya Müzesi",
+        "09:00-17:00",
+        "10 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker2 = L.marker([38.920836204622866, 27.837244643108335]).addTo(map).bindPopup(createPopupContent(
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9nX4nPJ2I6ebQNxkxQlxpCF_wMqhGvnixpw&usqp=CAU",
+        "Akhisar Müzesi",
+        "08:00-19:00",
+        "40 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker3 = L.marker([38.47962719836135, 28.031208219804924]).addTo(map).bindPopup(createPopupContent(
+        "https://lh5.googleusercontent.com/p/AF1QipMeo8rnw5x0HZ2uOq37o5OxQ0FrCLwb6rNqEkS8=w284-h160-k-no",
+        "Sardes Örenyer",
+        "08:00-17:00",
+        "50 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker4 = L.marker([38.349591, 28.517445]).addTo(map).bindPopup(createPopupContent(
+        "https://manisa.ktb.gov.tr/Resim/68730,sardartemistapinagijpg.png?0",
+        "Alaşehir Örenyeri",
+        "08:00-17:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker5 = L.marker([38.94872101461129, 27.828632241111585]).addTo(map).bindPopup(createPopupContent(
+        "https://www.akhisar.bel.tr/images/project/9195-5109.jpg",
+        "Akhisar Tepe Mezarlığı Örenyeri",
+        "08:00-17:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+</script>

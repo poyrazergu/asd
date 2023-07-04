@@ -1,0 +1,215 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        #map {
+            display: block;
+            height: 720px;
+            width: 1080px;
+            margin: auto;
+        }
+
+        .marker-tooltip {
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+    </style>
+    <title>Adıyaman Museums</title>
+</head>
+
+<body>
+    <h1>Adıyaman Museums</h1>
+    <div id="map"></div>
+    <button id="mainpage-button" onclick="goToHomePage()">Mainpage</button>
+    <button id="map-return" onclick="goToMap()">Back to Map</button>
+</body>
+
+<script>
+    function goToHomePage() {
+        window.location.href = '/mainpage';
+    }
+
+    function goToMap() {
+        window.location.href = '/mainpage/map';
+    }
+
+    function saveVisit(museumName, status) {
+        const data = {
+            museumName: museumName,
+            status: status
+        };
+
+        // Yerel depolama kullanarak status değerini sakla
+        localStorage.setItem(museumName, status);
+
+        fetch('/save-visit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (response.ok) {
+                    const popupContent = document.getElementById(museumName);
+                    const visitedButton = popupContent.querySelector('.visited-button');
+                    const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+                    if (status === 'visited') {
+                        visitedButton.remove();
+                        wishlistButton.remove();
+                        popupContent.innerHTML = 'You have visited here!';
+                    }
+                    if (status === 'wishlist') {
+                        wishlistButton.remove();
+                        const message = document.createElement('p');
+                        message.innerHTML = 'You want to visit here!';
+                        popupContent.appendChild(message);
+                    }
+                } else {
+                    console.error('Failed to save visit');
+                }
+            })
+            .catch(error => {
+                console.error('An error occurred while saving visit:', error);
+            });
+    }
+
+    // Popup'ın açıldığında yerel depolamada status değerini kontrol et
+    function checkVisitStatus(museumName) {
+        const status = localStorage.getItem(museumName);
+        const popupContent = document.getElementById(museumName);
+
+        if (status === 'visited') {
+            const visitedButton = popupContent.querySelector('.visited-button');
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+            visitedButton.remove();
+            wishlistButton.remove();
+            popupContent.innerHTML = 'You have visited here!';
+        } else if (status === 'wishlist') {
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+            const message = document.createElement('p');
+            message.innerHTML = 'You want to visit here!';
+            popupContent.appendChild(message);
+            wishlistButton.remove();
+        }
+    }
+</script>
+
+</html>
+<script>
+    var map = L.map('map').setView([37.763935399593194, 38.278250815341316], 10);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    function createPopupContent(imgURL, museumName, openingHours, entranceFee) {
+        var content = `
+            <img src="${imgURL}" width= "200">
+            <h1>${museumName}</h1>
+            <h2>Opening & Closing Time</h2>
+            <h3>${openingHours}</h3>
+            <h2>Entrance Fee</h2>
+            <h3>${entranceFee}</h3>
+            <div id="${museumName}">
+                <button class="visited-button" onclick="saveVisit('${museumName}', 'visited')">Add to Visited</button>
+                <button class="wishlist-button" onclick="saveVisit('${museumName}', 'wishlist')">Add to Wishlist</button>
+            </div>
+            `;
+        return content;
+    }
+
+    var marker = L.marker([37.763935399593194, 38.278250815341316]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_d8957243-e569-444e-8924-00fb58910e73.jpg",
+        "Adıyaman Müzesi",
+        "08:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+    var marker = L.marker([37.942906352142714, 38.65698221646071]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_50934e24-bbcd-44c9-bfa5-f05297a6f0f2.jpg",
+        "Arsemeia Örenyeri",
+        "08:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+    var marker = L.marker([37.97131726770359, 38.72846372808972]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_0384cec3-72e1-4544-8155-9e7ce9bcb936.jpg",
+        "Nemrut Örenyeri",
+        "08:00-19:00",
+        "100 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+    var marker = L.marker([37.79250184060746, 38.30316937023463]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_7a66a317-4484-4bc5-8bcf-f433698192d5.JPG",
+        "Perre Örenyeri",
+        "08:00-19:00",
+        "50 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+    var marker = L.marker([37.627155397548776, 37.9836512900971]).addTo(map).bindPopup(createPopupContent(
+        "https://muze.gov.tr/s3/SectionPicture/SP_1dba41b3-5fae-44ea-b6a7-7fbafa56b566.jpg",
+        "Sofraz Anıt Mezarı",
+        "08:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+    var marker = L.marker([37.9511678410287, 38.6525302886879]).addTo(map).bindPopup(createPopupContent(
+        "https://lh5.googleusercontent.com/p/AF1QipMwfQpaAKYx-QyvxHfLTxrN1H4L4VlX7RyIPbI=w408-h305-k-no",
+        "Kahta Yenikale",
+        "08:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+</script>

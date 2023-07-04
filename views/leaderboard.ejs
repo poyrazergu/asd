@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaderboard</title>
+  <style>
+    /* Your leaderboard styles here */
+  </style>
+</head>
+<body>
+  <h1>Leaderboard</h1>
+
+  <table>
+    <tr>
+      <th>Username</th>
+      <th>Visited Museums Count</th>
+    </tr>
+
+    <tbody id="leaderboard-body"></tbody>
+  </table>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', fetchLeaderboard);
+
+    function fetchLeaderboard() {
+      fetch('/leaderboard')
+        .then(response => response.json())
+        .then(data => renderLeaderboard(data.leaderboardData))
+        .catch(error => console.error('Error fetching leaderboard:', error));
+    }
+
+    function renderLeaderboard(leaderboardData) {
+      const leaderboardBody = document.getElementById('leaderboard-body');
+
+      leaderboardData.forEach(user => {
+        const row = document.createElement('tr');
+
+        const usernameCell = document.createElement('td');
+        usernameCell.textContent = user.username;
+        row.appendChild(usernameCell);
+
+        const visitedMuseumsCell = document.createElement('td');
+        visitedMuseumsCell.textContent = user.visitedMuseumsCount;
+        row.appendChild(visitedMuseumsCell);
+
+        leaderboardBody.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>

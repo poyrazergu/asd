@@ -1,0 +1,81 @@
+<html>
+  <title>Museum Guide</title>
+  <head>
+    <style>
+      body {
+        background-color: #2b2b2b;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+
+      h1 {
+        color: #adadad;
+        font-size: 50px;
+        font-weight: bold;
+      }
+
+      h2 {
+        color: #adadad;
+        font-size: 18px;
+      }
+
+      .custom-h2 {
+        font-size: 35px;
+        font-weight: normal;
+        color: #adadad;
+      }
+
+      button {
+        margin: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Museum Guide</h1>
+    <h2>Welcome, <span id="username"></span>!</h2>
+
+    <button id="map-button">MAP</button>
+    <button id="profile-button">Profile</button>
+    <button id="search-button">Friend Search</button>
+    <button id="leaderboard-button">Leaderboard</button>
+    <button id="aboutus-button">About Us</button>
+
+    <form action="/logout" method="GET">
+      <button type="submit">Logout</button>
+    </form>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        var usernameElement = document.getElementById("username");
+        usernameElement.innerText = "<%= username %>";
+      });
+
+      document.getElementById('map-button').onclick = function() {
+        window.location.href = '/mainpage/map';
+      };
+
+      document.getElementById('profile-button').onclick = function() {
+        window.location.href = '/mainpage/profile';
+      };
+
+      document.getElementById('search-button').onclick = function() {
+        window.location.href = '/mainpage/search';
+      };
+
+      document.getElementById('leaderboard-button').onclick = function() {
+        window.location.href = '/mainpage/leaderboard';
+      };
+
+      document.getElementById('aboutus-button').onclick = function() {
+        window.location.href = '/mainpage/aboutus';
+      };
+    </script>
+  </body>
+</html>

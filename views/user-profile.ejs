@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><%= userProfile.username %></title>
+    <style>
+        body {
+      background-color: #2b2b2b;
+      color: #adadad;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    </style>
+</head>
+<body>
+    
+    <h1><%= userProfile.username %> <% if (userProfile.visitedMuseums.length >= 0 && userProfile.visitedMuseums.length <= 4) { %> (Traveler) <% } 
+    else if (userProfile.visitedMuseums.length >= 5 && userProfile.visitedMuseums.length <= 9) { %> (Cultural Explorer) <% } 
+    else if (userProfile.visitedMuseums.length >= 10 && userProfile.visitedMuseums.length <= 14) { %> (Adventurer) <% } 
+    else if (userProfile.visitedMuseums.length >= 15 && userProfile.visitedMuseums.length <= 24) { %> (Maestro) <% } 
+    else if (userProfile.visitedMuseums.length >= 25 && userProfile.visitedMuseums.length <= 34) { %> (Master) <% } 
+    else if (userProfile.visitedMuseums.length >= 35) { %> (Legend) <% } %></h1>
+
+    <h2><%= userProfile.username %> Visited These Museums:</h2>
+    <ul>
+        <% userProfile.visitedMuseums.forEach(function(museum) { %>
+            <li><%= museum %></li>
+        <% }); %>
+    </ul>
+
+    <h2><%= userProfile.username %> Wants to Visit These Museums:</h2>
+    <ul>
+        <% userProfile.wantToVisitMuseums.forEach(function(museum) { %>
+            <li><%= museum %></li>
+        <% }); %>
+    </ul>
+</body>
+</html>

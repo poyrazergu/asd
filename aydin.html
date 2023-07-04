@@ -1,0 +1,282 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        #map {
+            display: block;
+            height: 720px;
+            width: 1080px;
+            margin: auto;
+        }
+
+        .marker-tooltip {
+            padding: 6px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+    </style>
+    <title>Aydın Museums</title>
+</head>
+
+<body>
+    <h1>Aydın Museums</h1>
+    <div id="map"></div>
+</body>
+<button id="mainpage-button" onclick="goToHomePage()">Mainpage</button>
+<button id="map-return" onclick="goToMap()">Back to Map</button>
+
+<script>
+    function goToHomePage() {
+        window.location.href = '/mainpage';
+    }
+
+    function goToMap() {
+        window.location.href = '/mainpage/map';
+    }
+
+    function saveVisit(museumName, status) {
+        const data = {
+            museumName: museumName,
+            status: status
+        };
+
+        // Yerel depolama kullanarak status değerini sakla
+        localStorage.setItem(museumName, status);
+
+        fetch('/save-visit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (response.ok) {
+                    const popupContent = document.getElementById(museumName);
+                    const visitedButton = popupContent.querySelector('.visited-button');
+                    const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+                    if (status === 'visited') {
+                        visitedButton.remove();
+                        wishlistButton.remove();
+                        popupContent.innerHTML = 'You have visited here!';
+                    }
+                    if (status === 'wishlist') {
+                        wishlistButton.remove();
+                        const message = document.createElement('p');
+                        message.innerHTML = 'You want to visit here!';
+                        popupContent.appendChild(message);
+                    }
+                } else {
+                    console.error('Failed to save visit');
+                }
+            })
+            .catch(error => {
+                console.error('An error occurred while saving visit:', error);
+            });
+    }
+
+    // Popup'ın açıldığında yerel depolamada status değerini kontrol et
+    function checkVisitStatus(museumName) {
+        const status = localStorage.getItem(museumName);
+        const popupContent = document.getElementById(museumName);
+
+        if (status === 'visited') {
+            const visitedButton = popupContent.querySelector('.visited-button');
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+
+            visitedButton.remove();
+            wishlistButton.remove();
+            popupContent.innerHTML = 'You have visited here!';
+        } else if (status === 'wishlist') {
+            const wishlistButton = popupContent.querySelector('.wishlist-button');
+            const message = document.createElement('p');
+            message.innerHTML = 'You want to visit here!';
+            popupContent.appendChild(message);
+            wishlistButton.remove();
+        }
+    }
+</script>
+
+</html>
+<script>
+    var map = L.map('map').setView([37.69988554091663, 28.146470923406], 10);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    function createPopupContent(imgURL, museumName, openingHours, entranceFee) {
+        var content = `
+            <img src="${imgURL}" width= "200">
+            <h1>${museumName}</h1>
+            <h2>Opening & Closing Time</h2>
+            <h3>${openingHours}</h3>
+            <h2>Entrance Fee</h2>
+            <h3>${entranceFee}</h3>
+            <div id="${museumName}">
+                <button class="visited-button" onclick="saveVisit('${museumName}', 'visited')">Add to Visited</button>
+                <button class="wishlist-button" onclick="saveVisit('${museumName}', 'wishlist')">Add to Wishlist</button>
+            </div>
+            `;
+        return content;
+    }
+
+    var marker = L.marker([37.89102074867069, 27.88540716209377]).addTo(map).bindPopup(createPopupContent(
+        "https://visitaydin.com/media/2022/05/YENI19-Tunay-Ates-Aydin-Arkeoloji-Muzesi-scaled.jpg",
+        "Arkeoloji Müzesi",
+        "08:30-17:30",
+        "50 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.9309485256053, 28.143832047869942]).addTo(map).bindPopup(createPopupContent(
+        "https://lh3.googleusercontent.com/p/AF1QipM_st4Kx7pJvxMd-KdvlQb2vjlnaaikSFU8Ta5F=s680-w680-h510",
+        "Yörük Ali Efe Evi Müzesi",
+        "08:30-17:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.592018788463925, 27.984857579843467]).addTo(map).bindPopup(createPopupContent(
+        "https://www.kulturportali.gov.tr/repoKulturPortali/large/SehirRehberi//GezilecekYer/20190516161333973_Alabanda%20(2).JPG?format=jpg&quality=50",
+        "Alabanda Antik Kenti Ören Yeri",
+        "08:00-17:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.90363540722538, 28.145277523530684]).addTo(map).bindPopup(createPopupContent(
+        "https://dizin.ankara.edu.tr/assets/c1181e95-7d72-4dae-9bc8-1d45ee11a3b2?fit=cover&width=740&height=415&quality=80",
+        "Nysa Antik Kenti Ören Yeri",
+        "08:30-19:00",
+        "40 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.85690607084514, 27.528197204590775]).addTo(map).bindPopup(createPopupContent(
+        "https://kucukdunya.com/wp-content/uploads/2021/02/Magnesia-antik-kenti.jpg",
+        "Magnesia Antik Kenti Ören Yeri",
+        "08:30-19:00",
+        "40 Turkish Liras"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.80336337943707, 27.26769126036183]).addTo(map).bindPopup(createPopupContent(
+        "https://www.turkiyeturizm.com/d/other/kadikalesi-(anaia)-.png",
+        "Kadıkalesi Antik Kenti Ören Yeri",
+        "08:30-18:30",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.862208771598894, 27.83809088650115]).addTo(map).bindPopup(createPopupContent(
+        "https://visitaydin.com/media/2022/04/YENIAYFOD-Turkan-Aslan-10-scaled.jpg",
+        "Tralleis Antik Kenti Ören Yeri",
+        "09:00-19:00",
+        "Free"
+    ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.55975164628259, 27.82681844121283]).addTo(map).bindPopup(createPopupContent(
+        "https://muzeler.org/images/google-place-images/alinda-oren-yeri.jpg",
+        "Alinda Antik Kenti Ören Yeri",
+        "08:30-17:30",
+        "Free"
+    )
+        , { className: 'marker-tooltip' }).on('mouseover', function (e) {
+            this.openPopup();
+        }).on('mouseout', function (e) {
+            if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+                this.closePopup();
+            }
+        }).on('popupopen', function (e) {
+            checkVisitStatus(this._popup._contentNode.id);
+        });
+
+    var marker = L.marker([37.70957151894157, 28.727078197039415]).addTo(map).bindPopup(createPopupContent(
+        "https://www.aphrodisias.org/wp-content/uploads/2014/12/aphrodisias-muzesi.jpg",
+        "Afrodisyas Müzesi ve Örenyeri",
+        "08:30-20:00",
+        "150 Turkish Liras"
+        )
+        , { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+
+    var marker = L.marker([37.76501774294931, 28.61018833691242]).addTo(map).bindPopup(createPopupContent(
+        "https://aydin.ktb.gov.tr/Resim/55065,k2jpg.png?0",
+        "Karacasu Etnografya Müzesi",
+        "08:30-17:30",
+        "Free"
+        ), { className: 'marker-tooltip' }).on('mouseover', function (e) {
+        this.openPopup();
+    }).on('mouseout', function (e) {
+        if (!document.getElementById(this._popup._contentNode.id + "-visited").checked && !document.getElementById(this._popup._contentNode.id + "-wishlist").checked) {
+            this.closePopup();
+        }
+    }).on('popupopen', function (e) {
+        checkVisitStatus(this._popup._contentNode.id);
+    });
+</script>

@@ -1,0 +1,52 @@
+<html>
+<title><%= username %></title>
+<head>
+    <style>
+        body {
+            background-color: #2b2b2b;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #adadad;
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            color: #adadad;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1><%= username %> <% if (visitedMuseums.length >= 0 && visitedMuseums.length <= 4) { %> (Traveler) <% } else if (visitedMuseums.length >= 5 && visitedMuseums.length <= 9) { %> (Cultural Explorer) <% } else if (visitedMuseums.length >= 10 && visitedMuseums.length <= 14) { %> (Adventurer) <% } else if (visitedMuseums.length >= 15 && visitedMuseums.length <= 24) { %> (Maestro) <% } else if (visitedMuseums.length >= 25 && visitedMuseums.length <= 34) { %> (Master) <% } else if (visitedMuseums.length >= 35) { %> (Legend) <% } %></h1>
+    <h2>Visited Museums:</h2>
+    <p>Your Visited Museums: <%= visitedMuseums.length %></p>
+    <ul>
+        <% visitedMuseums.forEach(function(museum) { %>
+        <li><%= museum %></li>
+        <% }) %>
+    </ul>
+
+    <h2>Want to Visit Museums:</h2>
+    <p>Museums You Want to Visit: <%= wantToVisitMuseums.length %></p>
+    <ul>
+        <% wantToVisitMuseums.forEach(function(museum) { %>
+        <li><%= museum %></li>
+        <% }) %>
+    </ul>
+</body>
+</html>
